@@ -3,6 +3,8 @@
 #include <fstream>
 #include "fileutil.h"
 
+const std::string NAME = "{Simulator Name}";
+
 int main()
 {
 	int arr[10][4];
@@ -13,8 +15,8 @@ int main()
 			arr[j][i] = -1;
 		}
 	}
-	std::cout << "{Frosty}: Please enter a filename. (Example: main.s)\n"
-			  << "{Frosty}: ";
+	std::cout << NAME << ": Please enter a filename. (Example: main.s)\n"
+			  << NAME << ": ";
 	//fileutil.open();
 	//interpreter.interpret(fileutil.getline());
 	std::string input;
