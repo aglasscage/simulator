@@ -31,6 +31,11 @@ public:
 		if (label_ == label) return true;
 		else return false;
 	}
+	bool operator!=(const std::string label)
+	{
+		if (label_ == label) return false;
+		else return true;
+	}
 	bool operator<=(const int & line_number)
 	{
 		if (line_number_ <= line_number) return true;
@@ -161,9 +166,16 @@ struct Registers
 
 		int j = 0;
 
+
 		for (j; j < label.size(); j++)
 		{
 			if (label[j] == jump_to) break;
+		}
+
+		if (j == label.size())
+		{
+			std::cout << "\nError: Cannot find label " << jump_to << '.' << std::endl;
+			return;
 		}
 
 		for (int k = 0; k < line_number.size(); k++)
