@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <math.h>
+#include <sstream>
 
 const int ARG_PTRS = 3;
 const int MAX_REGISTERS = 32;
@@ -45,6 +46,124 @@ private:
 	std::string label_;
 	int line_number_;
 };
+
+class Reg
+{
+public:
+	Reg & operator +=(const Reg & reg) { i_ += reg.get_value(); }
+	Reg & operator -=(const Reg & reg) { i_ -= reg.get_value(); }
+	Reg & operator *=(const Reg & reg) { i_ *= reg.get_value(); }
+	Reg & operator /=(const Reg & reg)
+	{
+		if (reg.get_value() != 0)
+		{
+			i_ /= reg.get_value();
+		}
+		else std::cout << "ERROR: Register division by 0" << std::endl;
+	}
+	Reg & operator=(const int & i) { i_ = i; }
+	Reg & operator=(const Reg & reg) { i_ = reg.get_value(); }
+	int operator=(const Reg & reg) const { return i_ + reg.get_value(); } const
+	int operator+(const Reg & reg) { return i_ + reg.get_value(); }	
+	int operator+(const int & i) { return i_ + i; }	
+	int operator-(const Reg & reg) { return i_ - reg.get_value(); }
+	int operator*(const Reg & reg) { return i_ * reg.get_value(); }
+	int operator/(const Reg & reg)
+	{
+		if (reg.get_value() != 0)
+		{
+			return i_ / reg.get_value();
+		}
+		else std::cout << "ERROR: Register division by 0" << std::endl;
+	}
+	int operator%(const Reg & reg)
+	{
+		if (reg.get_value() != 0)
+		{
+			return i_ % reg.get_value();
+		}
+		else std::cout << "ERROR: Register division by 0" << std::endl;
+	}
+	bool operator==(const int & i)
+	{
+		if (i_ == i) return true;
+		else return false;
+	}
+	int get_value() const
+	{
+		return i_;
+	}
+private:
+	int i_;
+	bool d_;
+};
+
+std::ostream & operator<<(std::ostream & cout, const Reg & reg)
+{
+    cout << reg.get_value();
+    return cout;
+}
+
+class Data
+{
+public:
+	Data(int i=0, char c=' ', std::string s="", std::string label="")
+		: i_(i), c_(c), s_(s), label_(label)
+	{}
+	void setData(const std::string & type, const std::string & data)
+	{
+		if (type == "asciiz")
+		{
+			setString(data);
+		}
+	}
+	void setInt(const int & i)
+	{
+		i_ = i;
+	}
+	void setChar(const int & c)
+	{
+		c_ = c;
+	}
+	void setString(const std::string & s)
+	{
+		s_ = s;
+	}
+	void setLabel(const std::string & label)
+	{
+		label_ = label;
+	}
+	int getInt() const
+	{
+		return i_;
+	}
+	char getChar() const
+	{
+		return c_;
+	}
+	std::string getString() const
+	{
+		return s_;
+	}
+	std::string getLabel() const
+	{
+		return label_;
+	}
+private:
+	int i_;
+	char c_;
+	std::string s_;
+	std::string label_;
+};
+
+std::ostream & operator<<(std::ostream & cout, const Data & data)
+{
+    cout << "Label:" << data.getLabel() << ", "
+    	 << "i:" << data.getInt() << ", "
+    	 << "c:" << data.getChar() << ", "
+    	 << "s:" << data.getString() << std::endl;
+    return cout;
+}
 
 std::ostream & operator<<(std::ostream & cout, const Label & label)
 {
@@ -122,6 +241,7 @@ struct Registers
 				 std::vector < int > line_number,
 				 std::vector < Label > label, int & index)
 	{
+		//std::cout << "processing: " << instruction << std::endl;
 		set_line_number(line_number[index]);
 		std::string type = "";
 		int i = 0;
@@ -133,8 +253,15 @@ struct Registers
 				break;
 			}
 			type.push_back(instruction[i]);
-			if (instruction[i] == 'j')
+			if (instruction[0] == 'j')
 			{
+				std::string temp = instruction.substr(0 , 3); 
+				if (temp == "jal")
+				{
+					type = temp;
+					i = 3;
+					break;
+				}
 				i++;
 				break;
 			}
@@ -151,8 +278,16 @@ struct Registers
 		else if (type == "mul") mul(instruction, i);
 		else if (type == "div") div(instruction, i);
 		else if (type == "rem") rem(instruction, i);
+		else if (type == "jal") jal(instruction, label, line_number, i, index);
 		else if (type == "j") jump(instruction, label, line_number, i, index);
 		else if (type == "") return;
+	}
+	void jal(const std::string & instruction, std::vector < Label > label,
+			  std::vector < int > line_number, int & i,
+			  int & index)
+	{
+		reg[31] = index;
+		jump(instruction, label, line_number, i, index);
 	}
 	void jump(const std::string & instruction, std::vector < Label > label,
 			  std::vector < int > line_number, int & i,
@@ -164,8 +299,13 @@ struct Registers
 			jump_to.push_back(instruction[i]);
 		}
 
-		int j = 0;
+		if (instruction.find("$ra") != std::string::npos) 
+		{
+			index = reg[31].get_value();
+			return;
+		}
 
+		int j = 0;
 
 		for (j; j < label.size(); j++)
 		{
@@ -182,7 +322,8 @@ struct Registers
 		{
 			if (label[j] <= line_number[k])
 			{
-				index = k;
+				// NOTE : THIS COULD CAUSE PROBLEMS DUE TO OUT OF RANGE INDEX
+				index = k - 1;
 				break;
 			}
 		}
@@ -481,8 +622,8 @@ struct Registers
 	int get_line_number() const { return line_number_; }
 
 	int line_number_;
-	int * arg[ARG_PTRS];
-	int reg[MAX_REGISTERS];
+	Reg * arg[ARG_PTRS];
+	Reg reg[MAX_REGISTERS];
 	// 0 = $0 / $zero
 	// 1 = at (assembler temporary)
 	// 2-3 = $v0, $v1
@@ -539,43 +680,132 @@ std::ostream & operator<<(std::ostream & cout, const Registers & registers)
 class Interpreter
 {
 public:
+	Interpreter()
+	{
+		data_flag = false;
+	}
 	void add_instruction(const std::string & line, const int & line_num)
 	{
 		code.push_back(line);
-		std::string temp;
-		std::string temp_label;
-		for (int i = 0; i < line.size(); i++)
-		{
-			// ignore spaces, newlines, and tabs
-			if (line[i] != ' ' && line[i] != '\n' && line[i] && line[i] != '\t') 
+		if (!data_flag)
+		{	
+			std::string temp;
+			std::string temp_label;
+			for (int i = 0; i < line.size(); i++)
 			{
-				if (line[i] == '#') return; // ignore comments
-				temp.push_back(line[i]);
-				if (line[i] == ':')
+				// ignore spaces, newlines, and tabs
+				if (line[i] != ' ' && line[i] != '\n' && line[i] && line[i] != '\t') 
 				{
-					for (int j = 0; j < i; j++)
+					if (line[i] == '#') return; // ignore comments
+					temp.push_back(line[i]);
+					if (line[i] == ':')
 					{
-						if (line[j] != ' ' && line[j] != '\n' 
-							&& line[j] && line[j] != '\t')
+						temp = "";
+						for (int j = 0; j < i; j++)
 						{
-							temp_label.push_back(line[j]);
+							if (line[j] != ' ' && line[j] != '\n' 
+								&& line[j] && line[j] != '\t')
+							{
+								temp_label.push_back(line[j]);
+							}
 						}
 					}
-				}
-			}	
+				}	
+			}
+			if (temp_label != "") 
+			{
+				Label t(temp_label, line_num);
+				label.push_back(t);
+			}
+			if (temp != "") 
+			{
+				if (temp == ".data") data_flag = true;
+				instruction.push_back(temp);
+				line_number.push_back(line_num);
+			}
 		}
-		if (temp_label != "") 
+		else
 		{
-			Label t(temp_label, line_num);
-			label.push_back(t);
+			std::string temp_type;
+			std::string temp_label;
+			std::string temp_data;
+			int i = 0;
+			for (i; i < line.size(); i++)
+			{
+				if (line[i] == ':')
+				{
+					i++;
+					break;
+				}
+				temp_label.push_back(line[i]);
+			}
+			for (i; i < line.size(); i++)
+			{
+				if (line[i] == '.')
+				{
+					i++;
+					break;
+				}
+			}
+			for (i; i < line.size(); i++)
+			{
+				if (line[i] == ' ')
+				{
+					i++;
+					break;
+				}
+				temp_type.push_back(line[i]);
+			}
+			for (i; i < line.size(); i++)
+			{
+				if (line[i] == '"') continue;
+				temp_data.push_back(line[i]);
+			}
+			if (temp_type == "space")
+			{
+				int d = string_to_integer(temp_data);
+				d /= 4;
+				Data temp(0);
+				for (int i = 0; i < d; i++)
+				{
+					if (i == 0)
+					{
+						Data temp1(0);
+						temp1.setLabel(temp_label);
+						data.push_back(temp1);
+					}
+					else
+					{
+						data.push_back(temp);
+					}
+				}
+			}
+			else
+			{
+				Data temp;
+				temp.setData(temp_type, temp_data);
+				temp.setLabel(temp_label);
+				data.push_back(temp);
+			}
 		}
-		if (temp != "") instruction.push_back(temp);
-		line_number.push_back(line_num);
 	}
 	void run()
 	{
 		int i = 0;
+		int j = 0;
 		int start = 0;
+		for (j = 0; j < instruction.size(); j++)
+		{
+			if (instruction[j] == ".text")
+			{
+				break;
+			}
+		}
+		if (j == instruction.size())
+		{
+			std::cout << "Error: no .text segment found." << std::endl;
+			return;
+		}
 		for (i; i < label.size(); i++)
 		{
 			if (label[i] == "main")
@@ -605,6 +835,15 @@ public:
 		std::cout << registers << std::endl;
 		print_labels();
 	}
+	int string_to_integer(std::string & string)
+	{
+		int result = 0;
+		for (int i = 0; i < string.size(); i++)
+		{
+			result += int(string[i] - 48) * pow(10, string.size() - i - 1);
+		}
+		return result;
+	}
 	int get_size() const
 	{
 		return instruction.size();
@@ -621,6 +860,15 @@ public:
 	{
 		return line_number[i];
 	}
+	void print_data()
+	{
+		std::cout << "---Data Segment---";
+		for (int i = 0; i < data.size(); i++)
+		{
+			std::cout << i << ": " << data[i];
+		}
+		std::cout << "---End Data Segment---" << std::endl;
+	}
 	void print_labels()
 	{
 		std::cout << '\n';
@@ -630,10 +878,12 @@ public:
 		}
 	}
 private:
+	bool data_flag;
 	std::vector < std::string > code;
 	std::vector < std::string > instruction;
 	std::vector < int > line_number;
 	std::vector < Label > label;
+	std::vector < Data > data;
 	Registers registers;
 };
 

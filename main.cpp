@@ -30,7 +30,7 @@ int main()
 		infile.close();
 	}
 
-	//std::cout << interpreter << std::endl;
+	interpreter.print_data();
 
 	interpreter.run();
 
