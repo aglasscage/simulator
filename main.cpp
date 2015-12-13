@@ -30,9 +30,9 @@ int main()
 		infile.close();
 	}
 
-	interpreter.print_data();
 
 	interpreter.run();
+	//interpreter.print_data();
 
 	return 0;
 }

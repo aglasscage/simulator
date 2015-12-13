@@ -51,6 +51,7 @@ class Reg
 {
 public:
 	Reg & operator +=(const Reg & reg) { i_ += reg.get_value(); }
+	Reg & operator +=(const int & i) { i_ += i; }
 	Reg & operator -=(const Reg & reg) { i_ -= reg.get_value(); }
 	Reg & operator *=(const Reg & reg) { i_ *= reg.get_value(); }
 	Reg & operator /=(const Reg & reg)
@@ -61,8 +62,17 @@ public:
 		}
 		else std::cout << "ERROR: Register division by 0" << std::endl;
 	}
-	Reg & operator=(const int & i) { i_ = i; }
-	Reg & operator=(const Reg & reg) { i_ = reg.get_value(); }
+	Reg & operator=(const int & i) 
+	{ 
+		i_ = i;
+		d_ = false;
+	}
+	Reg & operator=(const Reg & reg) 
+	{ 
+		i_ = reg.get_value();
+		d_ = reg.get_segment();
+	}
+	Reg & operator=(const bool & d) { d_ = d; }
 	int operator=(const Reg & reg) const { return i_ + reg.get_value(); } const
 	int operator+(const Reg & reg) { return i_ + reg.get_value(); }	
 	int operator+(const int & i) { return i_ + i; }	
@@ -89,9 +99,18 @@ public:
 		if (i_ == i) return true;
 		else return false;
 	}
+	bool operator==(const bool & d)
+	{
+		if (d_ == d) return true;
+		else return false;
+	}
 	int get_value() const
 	{
 		return i_;
+	}
+	bool get_segment() const
+	{
+		return d_;
 	}
 private:
 	int i_;
@@ -107,9 +126,26 @@ std::ostream & operator<<(std::ostream & cout, const Reg & reg)
 class Data
 {
 public:
-	Data(int i=0, char c=' ', std::string s="", std::string label="")
+	Data(int i=-9999, char c=' ', std::string s="", std::string label="")
 		: i_(i), c_(c), s_(s), label_(label)
 	{}
+	Data & operator=(const Data & data)
+	{
+		if (i_ == -9999 && s_ == "" && data.getChar() != ' ') 
+		{
+			c_ = data.getChar();
+		}
+		if (i_ == -9999 && c_ == ' ' && data.getString() != "")
+		{
+			s_ = data.getString();
+		}
+		else
+		{
+			std::cout << "ERROR: You are trying to store an invalid type.\n"
+					  << "ERROR: You must store values in the data segment according to their type"
+					  << std::endl;
+		}
+	}
 	void setData(const std::string & type, const std::string & data)
 	{
 		if (type == "asciiz")
@@ -158,10 +194,16 @@ private:
 
 std::ostream & operator<<(std::ostream & cout, const Data & data)
 {
+	if (data.getInt() != -9999) cout << data.getInt();
+	else if (data.getChar() != ' ') cout << data.getChar();
+	else if (data.getString() != "") cout << data.getString();
+	/*
     cout << "Label:" << data.getLabel() << ", "
     	 << "i:" << data.getInt() << ", "
     	 << "c:" << data.getChar() << ", "
-    	 << "s:" << data.getString() << std::endl;
+    	 << "s:" << data.getString() << '\n';
+    */
+    
     return cout;
 }
 
@@ -237,7 +279,8 @@ struct Registers
 			}
 		}
 	}
-	void compute(const std::string & instruction, 
+	void compute(const std::string & instruction,
+				 std::vector < Data > & data,
 				 std::vector < int > line_number,
 				 std::vector < Label > label, int & index)
 	{
@@ -271,7 +314,10 @@ struct Registers
 			}
 		}
 		if (type == "li") load_immediate(instruction, i);
-		else if (type == "syscall") syscall(instruction);
+		else if (type == "la") load_address(instruction, data, i);
+		else if (type == "lw") load_word(instruction, i);
+		else if (type == "sw") store_word(instruction, data, i);
+		else if (type == "syscall") syscall(instruction, data);
 		else if (type == "add") add(instruction, i);
 		else if (type == "addi") addi(instruction, i);
 		else if (type == "sub") sub(instruction, i);
@@ -353,6 +399,132 @@ struct Registers
 		// computation
 		if (arg_valid(1)) *arg[0] = string_to_integer(value);
 		release_reg();
+	}
+	void load_address(const std::string & instruction, const std::vector < Data > & data, int & i)
+	{
+		std::string reg_key = "";
+		std::string label = "";
+		for (i; i < instruction.size(); i++)
+		{
+			if (instruction[i] == ',')
+			{
+				i++;
+				break;
+			}
+			reg_key.push_back(instruction[i]);
+		}
+		for (i; i < instruction.size(); i++)
+		{
+			label.push_back(instruction[i]);
+		}
+		set_reg(reg_key);
+		if (arg_valid(1))
+		{
+			for (int j = 0; j < data.size(); j++)
+			{
+				if (data[j].getLabel() == label)
+				{
+					*arg[0] = j;
+					*arg[0] = true;
+					break;
+				}
+			}
+		}
+		release_reg();
+	}
+	void load_word(const std::string & instruction, int & i)
+	{
+		std::string reg_key0 = "";
+		std::string value = "";
+		std::string reg_key1 = "";
+		for (i; i < instruction.size(); i++)
+		{
+			if (instruction[i] == ',')
+			{
+				i++;
+				break;
+			}
+			reg_key0.push_back(instruction[i]);
+		}
+		for (i; i < instruction.size(); i++)
+		{
+			if (instruction[i] == '(')
+			{
+				i++;
+				break;
+			}
+			value.push_back(instruction[i]);
+		}
+		for (i; i < instruction.size(); i++)
+		{
+			if (instruction[i] == '$') continue;
+			if (instruction[i] == ')')
+			{
+				break;
+			}
+			reg_key1.push_back(instruction[i]);
+		}
+		set_reg(reg_key0);
+		set_reg(reg_key1);
+		if (arg_valid(2))
+		{
+			*arg[0] = *arg[1];
+			*arg[0] += string_to_integer(value) / 4;
+		}
+		release_reg();
+		//lw 	$t3, 0($t5)
+		return;
+	}
+	void store_word(const std::string & instruction, std::vector < Data > & data, int & i)
+	{
+		std::string reg_key0 = "";
+		std::string value = "";
+		std::string reg_key1 = "";
+		for (i; i < instruction.size(); i++)
+		{
+			if (instruction[i] == ',')
+			{
+				i++;
+				break;
+			}
+			reg_key0.push_back(instruction[i]);
+		}
+		for (i; i < instruction.size(); i++)
+		{
+			if (instruction[i] == '(')
+			{
+				i++;
+				break;
+			}
+			value.push_back(instruction[i]);
+		}
+		for (i; i < instruction.size(); i++)
+		{
+			if (instruction[i] == '$') continue;
+			if (instruction[i] == ')')
+			{
+				break;
+			}
+			reg_key1.push_back(instruction[i]);
+		}
+		set_reg(reg_key0);
+		set_reg(reg_key1);
+		if (arg_valid(2))
+		{
+			int index = arg[1]->get_value();
+			index += string_to_integer(value) / 4;
+			if (*arg[0] == true)
+			{
+				data[index] = data[arg[0]->get_value()];
+			}
+			else
+			{
+				data[index].setInt(arg[0]->get_value());
+			}
+		}
+		release_reg();
+		//lw 	$t3, 0($t5)
+		return;
 	}
 	void add(const std::string & instruction, int & i)
 	{
@@ -592,9 +764,20 @@ struct Registers
 		}
 		release_reg();
 	}
-	void syscall(const std::string & instruction)
+	void syscall(const std::string & instruction, const std::vector < Data > & data)
 	{
-		if (reg[2] == 1) std::cout << reg[4];
+		if (reg[2] == 1)
+		{
+			// reg 4
+			if (reg[4] == false)
+			{
+				std::cout << reg[4].get_value();
+			}
+			else
+			{
+				std::cout << data[reg[4].get_value()];
+			}
+		}
 	}
 	int string_to_integer(std::string & string)
 	{
@@ -770,7 +953,7 @@ public:
 				{
 					if (i == 0)
 					{
-						Data temp1(0);
+						Data temp1(-9999);
 						temp1.setLabel(temp_label);
 						data.push_back(temp1);
 					}
@@ -830,10 +1013,10 @@ public:
 
 		for (i; i < instruction.size(); i++)
 		{
-			registers.compute(instruction[i], line_number, label, i);
+			registers.compute(instruction[i], data, line_number, label, i);
 		}
 		std::cout << registers << std::endl;
-		print_labels();
+		//print_labels();
 	}
 	int string_to_integer(std::string & string)
 	{
@@ -862,7 +1045,7 @@ public:
 	}
 	void print_data()
 	{
-		std::cout << "---Data Segment---";
+		std::cout << "---Data Segment---\n";
 		for (int i = 0; i < data.size(); i++)
 		{
 			std::cout << i << ": " << data[i];
