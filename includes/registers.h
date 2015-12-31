@@ -536,13 +536,37 @@ struct Registers
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
+		std::string value = "";
+
 		for (i; i < instruction.size(); i++)
 		{
 			if (instruction[i] == ',')
 			{
 				i++;
-				if (instruction[i++] != '$') reg_key0.push_back('g');
-				//i++;
+				if (instruction[i] != '$')
+				{
+					for (i; i < instruction.size(); i++)
+					{
+						if (instruction[i] == ',')
+						{
+							i++;
+							break;
+						}
+						value.push_back(instruction[i]);
+					}
+					set_reg(reg_key0);
+					// computation
+					if (arg_valid(1))
+					{
+						if (*arg[0] == string_to_integer(value))
+						{
+							jump(instruction, label, line_number, i, index);
+						}
+					}
+					release_reg();
+					return;
+				}
+				i++;
 				break;
 			}
 			reg_key0.push_back(instruction[i]);
@@ -574,13 +598,36 @@ struct Registers
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
+		std::string value = "";
 		for (i; i < instruction.size(); i++)
 		{
 			if (instruction[i] == ',')
 			{
 				i++;
-				if (instruction[i++] != '$') reg_key0.push_back('h');
-				//i++;
+				if (instruction[i] != '$')
+				{
+					for (i; i < instruction.size(); i++)
+					{
+						if (instruction[i] == ',')
+						{
+							i++;
+							break;
+						}
+						value.push_back(instruction[i]);
+					}
+					set_reg(reg_key0);
+					// computation
+					if (arg_valid(1))
+					{
+						if (!(*arg[0] == string_to_integer(value)))
+						{
+							jump(instruction, label, line_number, i, index);
+						}
+					}
+					release_reg();
+					return;
+				}
+				i++;
 				break;
 			}
 			reg_key0.push_back(instruction[i]);
@@ -907,7 +954,7 @@ struct Registers
 
 		if (j == label.size())
 		{
-			std::cout << "\nError: Cannot find label " << jump_to << '.' << std::endl;
+			std::cout << "\nError: Cannot find label " << jump_to << ". Line: " << get_line_number() << std::endl;
 			return;
 		}
 
@@ -1356,7 +1403,7 @@ struct Registers
 		{
 			int temp = 0;
 			std::cin >> temp;
-			reg[4] = temp;
+			reg[2] = temp;
 		}
 		else if (reg[2] == 4)
 		{

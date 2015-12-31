@@ -23,12 +23,14 @@ int main()
 					  << "\"open\" - Open a file in your Mips Sim folder.\n"
 					  << "\"run\" - Run the file opened by Mips Sim.\n"
 					  << "\"data\" - View the data segment.\n"
+					  << "\"registers\" - View the registers.\n"
 					  << "\"edit\" - Enter edit mode.\n"
 					  << "\"quit\" - Exit Mips Sim.\n"
 					  << "========================================\n\n";
 		}
 		else if (input == "open")
 		{
+			interpreter.reinitialize();
 			std::cout << "\n\tPlease enter a file name. (Example: test.s)\n\n"
 				  	  << NAME << ": ";
 			std::getline(std::cin, input);
@@ -52,6 +54,12 @@ int main()
 			}
 		}
 		else if (input == "data")
+		{
+			std::cout << '\n';
+			interpreter.data_view();
+			std::cout << '\n';
+		}
+		else if (input == "registers")
 		{
 			std::cout << '\n';
 			interpreter.data_view();
