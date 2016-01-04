@@ -165,6 +165,7 @@ public:
 		for (i; i < instruction.size(); i++)
 		{
 			registers.compute(instruction[i], data, line_number, label, i);
+			//data_view();
 		}
 		std::cout << registers << std::endl;
 		//print_labels();

@@ -68,8 +68,16 @@ public:
 	}
 	Reg & operator=(const bool & d) { d_ = d; }
 	int operator=(const Reg & reg) const { return i_ + reg.get_value(); } const
-	int operator+(const Reg & reg) { return i_ + reg.get_value(); }	
-	int operator+(const int & i) { return i_ + i; }	
+	int operator+(const Reg & reg) 
+	{ 
+		if (d_) return i_ + reg.get_value() / 4;
+		else return i_ + reg.get_value(); 
+	}	
+	int operator+(const int & i) 
+	{
+		if (d_) return i_ + i / 4;
+		else return i_ + i; 
+	}	
 	int operator-(const Reg & reg) { return i_ - reg.get_value(); }
 	int operator*(const Reg & reg) { return i_ * reg.get_value(); }
 	int operator/(const Reg & reg)
@@ -327,6 +335,7 @@ struct Registers
 		if (arg_valid(3))
 		{
 			if (*arg[1] < *arg[2]) *arg[0] = 1;
+			else *arg[0] = 0;
 		}
 		release_reg();
 	}
@@ -367,6 +376,7 @@ struct Registers
 		if (arg_valid(3))
 		{
 			if (*arg[1] == *arg[2]) *arg[0] = 1;
+			else *arg[0] = 0;
 		}
 		release_reg();
 	}
@@ -407,6 +417,7 @@ struct Registers
 		if (arg_valid(3))
 		{
 			if (*arg[1] <= *arg[2]) *arg[0] = 1;
+			else *arg[0] = 0;
 		}
 		release_reg();
 	}
@@ -447,6 +458,7 @@ struct Registers
 		if (arg_valid(3))
 		{
 			if (*arg[1] != *arg[2]) *arg[0] = 1;
+			else *arg[0] = 0;
 		}
 		release_reg();
 	}
@@ -487,6 +499,7 @@ struct Registers
 		if (arg_valid(3))
 		{
 			if (*arg[1] >= *arg[2]) *arg[0] = 1;
+			else *arg[0] = 0;
 		}
 		release_reg();
 	}
@@ -527,6 +540,7 @@ struct Registers
 		if (arg_valid(3))
 		{
 			if (*arg[1] > *arg[2]) *arg[0] = 1;
+			else *arg[0] = 0;
 		}
 		release_reg();
 	}

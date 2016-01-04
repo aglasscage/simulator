@@ -47,16 +47,16 @@ private:
 class Data
 {
 public:
-	Data(int i=-9999, char c=' ', std::string s="", std::string label="")
+	Data(int i=-9999, char c='~', std::string s="", std::string label="")
 		: i_(i), c_(c), s_(s), label_(label)
 	{}
 	Data & operator=(const Data & data)
 	{
-		if (i_ == -9999 && s_ == "" && data.getChar() != ' ') 
+		if (i_ == -9999 && s_ == "" && data.getChar() != '~') 
 		{
 			c_ = data.getChar();
 		}
-		if (i_ == -9999 && c_ == ' ' && data.getString() != "")
+		if (i_ == -9999 && c_ == '~' && data.getString() != "")
 		{
 			s_ = data.getString();
 		}
@@ -78,7 +78,7 @@ public:
 	{
 		i_ = i;
 	}
-	void setChar(const int & c)
+	void setChar(const char & c)
 	{
 		c_ = c;
 	}
@@ -110,7 +110,7 @@ public:
 	{
     	std::cout << getLabel() << ": ";
     	if (getInt() != -9999) std::cout << getInt();
-		else if (getChar() != ' ') std::cout << getChar();
+		else if (getChar() != '~') std::cout << getChar();
 		else if (getString() != "")
 		{
 			for (int i = 0; i < getString().size(); i++)
@@ -128,8 +128,8 @@ private:
 
 std::ostream & operator<<(std::ostream & cout, const Data & data)
 {
-	if (data.getInt() != -9999) cout << data.getInt();
-	else if (data.getChar() != ' ') cout << data.getChar();
+	if (data.getInt() != -9999 && data.getChar() == '~' && data.getString() == "") cout << data.getInt();
+	else if (data.getChar() != '~') cout << data.getChar();
 	else if (data.getString() != "")
 	{
 		for (int i = 0; i < data.getString().size(); i++)
