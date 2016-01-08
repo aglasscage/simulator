@@ -9,6 +9,8 @@ const std::string NAME = "{Mips Sim}";
 int main()
 {
 	Interpreter interpreter;
+    int line_num_master = 1;
+    
 
 	std::string input;
 	std::cout << NAME << ": Please enter a command. (\"help\" for a list of commands)\n";
@@ -28,6 +30,12 @@ int main()
 					  << "\"quit\" - Exit Mips Sim.\n"
 					  << "========================================\n\n";
 		}
+        else if (input == "edit")
+        {
+            while (input != "quit")
+            {
+            }
+        }
 		else if (input == "open")
 		{
 			interpreter.reinitialize();
@@ -44,6 +52,7 @@ int main()
 				{
 					interpreter.add_instruction(line, line_num);
 					line_num++;
+                    line_num_master = line_num;
 				}
 				infile.close();
 				std::cout << "\n\tFile: \"" << input << "\" has been opened.\n\n";
@@ -67,6 +76,7 @@ int main()
 		}
 		else if (input == "reinitialize")
 		{
+            line_num_master = 1;
 			interpreter.reinitialize();
 			std::cout << "\n\tThe Interpreter has been reinitialized\n" << std::endl;
 		}

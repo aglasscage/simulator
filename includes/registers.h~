@@ -1616,7 +1616,6 @@ struct Registers
 		{
 			arg[i] = NULL;
 		}
-        quit_ = false;
 	}
 	int get_line_number() const { return line_number_; }
 
