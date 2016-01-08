@@ -6,7 +6,6 @@
 #include <string>
 #include <math.h>
 #include <sstream>
-#include "registers.h"
 #include "data.h"
 #include "registers.h"
 
@@ -103,7 +102,7 @@ public:
 				{
 					if (i == 0)
 					{
-						Data temp1(-9999);
+						Data temp1(0);
 						temp1.setLabel(temp_label);
 						data.push_back(temp1);
 					}
@@ -165,10 +164,12 @@ public:
 		for (i; i < instruction.size(); i++)
 		{
 			registers.compute(instruction[i], data, line_number, label, i);
+			if (registers.quit_ == true) break;
+			//std::cout << registers << std::endl;
 			//data_view();
 		}
-		std::cout << registers << std::endl;
-		//print_labels();
+		//data_view();
+		//std::cout << registers << std::endl;
 	}
 	int string_to_integer(const std::string & string)
 	{

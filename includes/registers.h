@@ -15,7 +15,11 @@ class Reg
 {
 public:
 	Reg & operator +=(const Reg & reg) { i_ += reg.get_value(); }
-	Reg & operator +=(const int & i) { i_ += i; }
+	Reg & operator +=(const int & i) 
+	{ 
+		if (d_) i_ += i / 4;
+		else i_ += i; 
+	}
 	Reg & operator -=(const Reg & reg) { i_ -= reg.get_value(); }
 	Reg & operator *=(const Reg & reg) { i_ *= reg.get_value(); }
 	Reg & operator /=(const Reg & reg)
@@ -148,7 +152,7 @@ std::ostream & operator<<(std::ostream & cout, const Reg & reg)
 struct Registers
 {
 	Registers()
-		: line_number_(0)
+		: line_number_(0), quit_(false)
 	{
 		for (int i = 0; i < MAX_REGISTERS; i++)
 		{
@@ -215,6 +219,124 @@ struct Registers
 	}
 	*/
 	// function to reset the register pointers to NULL
+	bool eq(const Reg & reg, const Reg & reg2, const std::vector < Data > data)
+	{
+		int temp0 = 0;
+		int temp1 = 0;
+		if (reg.get_segment() == true)
+		{
+			temp0 = data[reg.get_value()].getInt();
+		}
+		else
+		{
+			temp0 = reg.get_value();
+		}
+		if (reg2.get_segment() == true)
+		{
+			temp1 = data[reg2.get_value()].getInt();
+		}
+		else
+		{
+			temp1 = reg2.get_value();
+		}
+		//std::cout << "comparinng.." << temp0 << " == " << temp1 << std::endl;
+		if (temp0 == temp1) return true;
+		else return false;
+	}
+	bool gt(const Reg & reg, const Reg & reg2, const std::vector < Data > data)
+	{
+		int temp0 = 0;
+		int temp1 = 0;
+		if (reg.get_segment() == true)
+		{
+			temp0 = data[reg.get_value()].getInt();
+		}
+		else
+		{
+			temp0 = reg.get_value();
+		}
+		if (reg2.get_segment() == true)
+		{
+			temp1 = data[reg2.get_value()].getInt();
+		}
+		else
+		{
+			temp1 = reg2.get_value();
+		}
+		//std::cout << "bgt..." << temp0 << " == " << temp1 << std::endl;
+		if (temp0 > temp1) return true;
+		else return false;
+	}
+	bool lt(const Reg & reg, const Reg & reg2, const std::vector < Data > data)
+	{
+		int temp0 = 0;
+		int temp1 = 0;
+		if (reg.get_segment() == true)
+		{
+			temp0 = data[reg.get_value()].getInt();
+		}
+		else
+		{
+			temp0 = reg.get_value();
+		}
+		if (reg2.get_segment() == true)
+		{
+			temp1 = data[reg2.get_value()].getInt();
+		}
+		else
+		{
+			temp1 = reg2.get_value();
+		}
+		//std::cout << "blt..." << temp0 << " == " << temp1 << std::endl;
+		if (temp0 < temp1) return true;
+		else return false;
+	}
+	bool lte(const Reg & reg, const Reg & reg2, const std::vector < Data > data)
+	{
+		int temp0 = 0;
+		int temp1 = 0;
+		if (reg.get_segment() == true)
+		{
+			temp0 = data[reg.get_value()].getInt();
+		}
+		else
+		{
+			temp0 = reg.get_value();
+		}
+		if (reg2.get_segment() == true)
+		{
+			temp1 = data[reg2.get_value()].getInt();
+		}
+		else
+		{
+			temp1 = reg2.get_value();
+		}
+		if (temp0 <= temp1) return true;
+		else return false;
+	}
+	bool gte(const Reg & reg, const Reg & reg2, const std::vector < Data > data)
+	{
+		int temp0 = 0;
+		int temp1 = 0;
+		if (reg.get_segment() == true)
+		{
+			temp0 = data[reg.get_value()].getInt();
+		}
+		else
+		{
+			temp0 = reg.get_value();
+		}
+		if (reg2.get_segment() == true)
+		{
+			temp1 = data[reg2.get_value()].getInt();
+		}
+		else
+		{
+			temp1 = reg2.get_value();
+		}
+		if (temp0 >= temp1) return true;
+		else return false;
+	}
 	void release_reg()
 	{
 		for (int i = 0; i < ARG_PTRS; i++)
@@ -273,18 +395,18 @@ struct Registers
 		else if (type == "rem") rem(instruction, i);
 		else if (type == "jal") jal(instruction, label, line_number, i, index);
 		else if (type == "j") jump(instruction, label, line_number, i, index);
-		else if (type == "beq") beq(instruction, label, line_number, i, index);
-		else if (type == "bne") bne(instruction, label, line_number, i, index);
-		else if (type == "blt") blt(instruction, label, line_number, i, index);
-		else if (type == "ble") ble(instruction, label, line_number, i, index);
-		else if (type == "bgt") bgt(instruction, label, line_number, i, index);
-		else if (type == "bge") bge(instruction, label, line_number, i, index);
+		else if (type == "beq") beq(instruction, label, line_number, i, index, data);
+		else if (type == "bne") bne(instruction, label, line_number, i, index, data);
+		else if (type == "blt") blt(instruction, label, line_number, i, index, data);
+		else if (type == "ble") ble(instruction, label, line_number, i, index, data);
+		else if (type == "bgt") bgt(instruction, label, line_number, i, index, data);
+		else if (type == "bge") bge(instruction, label, line_number, i, index, data);
 		else if (type == "bgtz") bgtz(instruction, label, line_number, i, index);
 		else if (type == "bltz") bltz(instruction, label, line_number, i, index);
 		else if (type == "bgez") bgez(instruction, label, line_number, i, index);
 		else if (type == "blez") blez(instruction, label, line_number, i, index);
 		else if (type == "slt") slt(instruction, i);
-		else if (type == "seq") seq(instruction, i);
+		else if (type == "seq") seq(instruction, i, data);
 		else if (type == "sle") sle(instruction, i);
 		else if (type == "sne") sne(instruction, i);
 		else if (type == "sge") sge(instruction, i);		
@@ -339,7 +461,7 @@ struct Registers
 		}
 		release_reg();
 	}
-	void seq(const std::string & instruction, int & i)
+	void seq(const std::string & instruction, int & i, const std::vector < Data > & data)
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
@@ -375,7 +497,7 @@ struct Registers
 		set_reg(reg_key2);
 		if (arg_valid(3))
 		{
-			if (*arg[1] == *arg[2]) *arg[0] = 1;
+			if (eq(*arg[1], *arg[2], data)) *arg[0] = 1;
 			else *arg[0] = 0;
 		}
 		release_reg();
@@ -546,7 +668,7 @@ struct Registers
 	}
 	void beq(const std::string & instruction, std::vector < Label > label,
 			  std::vector < int > line_number, int & i,
-			  int & index)
+			  int & index, const std::vector < Data > data)
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
@@ -598,7 +720,7 @@ struct Registers
 		set_reg(reg_key1);
 		if (arg_valid(2))
 		{
-			if (*arg[0] == *arg[1])
+			if (eq(*arg[0], *arg[1], data))
 			{
 				jump(instruction, label, line_number, i, index);
 			}
@@ -608,7 +730,7 @@ struct Registers
 	}
 	void bne(const std::string & instruction, std::vector < Label > label,
 			  std::vector < int > line_number, int & i,
-			  int & index)
+			  int & index, const std::vector < Data > data)
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
@@ -659,7 +781,7 @@ struct Registers
 		set_reg(reg_key1);
 		if (arg_valid(2))
 		{
-			if (!(*arg[0] == *arg[1]))
+			if (!(eq(*arg[0], *arg[1], data)))
 			{
 				jump(instruction, label, line_number, i, index);
 			}
@@ -669,7 +791,7 @@ struct Registers
 	}
 	void blt(const std::string & instruction, std::vector < Label > label,
 			  std::vector < int > line_number, int & i,
-			  int & index)
+			  int & index, const std::vector < Data > data)
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
@@ -697,7 +819,7 @@ struct Registers
 		set_reg(reg_key1);
 		if (arg_valid(2))
 		{
-			if (*arg[0] < *arg[1])
+			if (lt(*arg[0], *arg[1], data))
 			{
 				jump(instruction, label, line_number, i, index);
 			}
@@ -706,7 +828,7 @@ struct Registers
 	}
 	void bgt(const std::string & instruction, std::vector < Label > label,
 			  std::vector < int > line_number, int & i,
-			  int & index)
+			  int & index, const std::vector < Data > data)
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
@@ -734,7 +856,7 @@ struct Registers
 		set_reg(reg_key1);
 		if (arg_valid(2))
 		{
-			if (*arg[0] > *arg[1])
+			if (gt(*arg[0], *arg[1], data))
 			{
 				jump(instruction, label, line_number, i, index);
 			}
@@ -743,7 +865,7 @@ struct Registers
 	}
 	void ble(const std::string & instruction, std::vector < Label > label,
 			  std::vector < int > line_number, int & i,
-			  int & index)
+			  int & index, const std::vector < Data > data)
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
@@ -771,7 +893,7 @@ struct Registers
 		set_reg(reg_key1);
 		if (arg_valid(2))
 		{
-			if (*arg[0] <= *arg[1])
+			if (lte(*arg[0], *arg[1], data))
 			{
 				jump(instruction, label, line_number, i, index);
 			}
@@ -780,7 +902,7 @@ struct Registers
 	}
 	void bge(const std::string & instruction, std::vector < Label > label,
 			  std::vector < int > line_number, int & i,
-			  int & index)
+			  int & index, const std::vector < Data > data)
 	{
 		std::string reg_key0 = "";
 		std::string reg_key1 = "";
@@ -808,7 +930,7 @@ struct Registers
 		set_reg(reg_key1);
 		if (arg_valid(2))
 		{
-			if (*arg[0] >= *arg[1])
+			if (gte(*arg[0], *arg[1], data))
 			{
 				jump(instruction, label, line_number, i, index);
 			}
@@ -1084,7 +1206,8 @@ struct Registers
 		if (arg_valid(2))
 		{
 			*arg[0] = *arg[1];
-			*arg[0] += string_to_integer(value) / 4;
+			*arg[0] += string_to_integer(value);
+			//std::cout << "\t\tloading: " << (*arg[0]).get_value() << std::endl;
 		}
 		release_reg();
 		//lw 	$t3, 0($t5)
@@ -1185,7 +1308,9 @@ struct Registers
 		set_reg(reg_key2);
 		if (arg_valid(3))
 		{
-			*arg[0] = *arg[1] + *arg[2];
+			Reg t = *arg[1];
+			t += (*arg[2]).get_value();
+			*arg[0] = t;
 		}
 		release_reg();
 	}
@@ -1207,7 +1332,12 @@ struct Registers
 					}
 					set_reg(reg_key0);
 					// computation
-					if (arg_valid(1)) *arg[0] = *arg[0] + string_to_integer(value);
+					if (arg_valid(1))
+					{
+						Reg t = *arg[0];
+						t += string_to_integer(value);
+						*arg[0] = t;
+					}
 					release_reg();
 					return;
 				}
@@ -1236,7 +1366,14 @@ struct Registers
 		set_reg(reg_key0);
 		set_reg(reg_key1);
 		// computation
-		if (arg_valid(2)) *arg[0] = *arg[1] + string_to_integer(value);
+		//std::cout << "\t\t\tADDDI Value Before: " << (*arg[0]).get_value() << std::endl;
+		if (arg_valid(2))
+		{
+			Reg t = *arg[1];
+			t += string_to_integer(value);
+			*arg[0] = t;
+		}
+		//std::cout << "\t\t\tADDDI Value After: " << (*arg[0]).get_value() << std::endl;
 		release_reg();
 	}
 	void sub(const std::string & instruction, int & i)
@@ -1403,7 +1540,6 @@ struct Registers
 	{
 		if (reg[2] == 1)
 		{
-			// reg 4
 			if (reg[4] == false)
 			{
 				std::cout << reg[4].get_value();
@@ -1421,6 +1557,7 @@ struct Registers
 		}
 		else if (reg[2] == 4)
 		{
+			//std::cout << '\t' << reg[4].get_value() << ": ";
 			if (reg[4] == false)
 			{
 				std::cout << "ERROR: $a0 does not hold the address of a string." << std::endl;
@@ -1429,6 +1566,11 @@ struct Registers
 			{
 				std::cout << data[reg[4].get_value()];
 			}
+			//std::cout << std::endl;
+		}
+		else if (reg[2] == 10)
+		{
+			quit_ = true;
 		}
 	}
 	int string_to_integer(std::string & string)
@@ -1477,6 +1619,7 @@ struct Registers
 	}
 	int get_line_number() const { return line_number_; }
 
+	bool quit_;
 	int line_number_;
 	std::vector < int > sp;
 	Reg * arg[ARG_PTRS];

@@ -60,6 +60,10 @@ public:
 		{
 			s_ = data.getString();
 		}
+		if (i_ != -9999 && c_ == '~' && data.getString() == "")
+		{
+			i_ = data.getInt();
+		}
 		else
 		{
 			std::cout << "ERROR: You are trying to store an invalid type.\n"
@@ -110,8 +114,8 @@ public:
 	{
     	std::cout << getLabel() << ": ";
     	if (getInt() != -9999) std::cout << getInt();
-		else if (getChar() != '~') std::cout << getChar();
-		else if (getString() != "")
+		if (getChar() != '~') std::cout << getChar();
+		if (getString() != "")
 		{
 			for (int i = 0; i < getString().size(); i++)
 			{
